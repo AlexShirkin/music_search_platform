@@ -42,6 +42,35 @@ make ingest-fma               # PostgreSQL + MinIO
 
 Подробнее: [docs/datasets.md](docs/datasets.md)
 
+## Quick start (этап 2 — inference)
+
+Требует этапы 0–1 (venv, модели, инфра, каталог в PostgreSQL).
+
+```bash
+make download-models          # если ещё не скачаны
+make migrate-db               # таблица track_embeddings
+make run-inference-audio      # API на http://localhost:8001
+```
+
+Проверка API:
+
+```bash
+curl -s http://localhost:8001/health | jq
+curl -s -F "file=@data/fma/fma_small/000/000002.mp3" \
+  http://localhost:8001/api/v1/embed | jq '.embedding_dim, .num_patches, .tempo, .top_moods'
+curl -s -X POST http://localhost:8001/api/v1/embed/path \
+  -H 'Content-Type: application/json' \
+  -d '{"track_id": "2"}' | jq '.track_id, .embedding_dim'
+```
+
+Batch-эмбеддинг (100 треков → PostgreSQL + parquet + MinIO):
+
+```bash
+make batch-embed
+```
+
+Сервис: `services/inference-audio/` · Swagger: http://localhost:8001/docs
+
 ## Документация
 
 | Документ | Описание |
@@ -55,6 +84,8 @@ make ingest-fma               # PostgreSQL + MinIO
 
 ## Makefile targets
 
+### Этап 0
+
 | Target | Описание |
 |--------|----------|
 | `make install-dev` | editable install + dev/inference deps |
@@ -62,11 +93,26 @@ make ingest-fma               # PostgreSQL + MinIO
 | `make test` | pytest unit |
 | `make download-models` | MusiCNN ONNX (ISC) |
 | `make smoke-musicnn` | локальный inference smoke |
-| `make infra-up` / `make infra-down` | Postgres + MinIO + Qdrant (этап 1) |
+
+### Этап 1
+
+| Target | Описание |
+|--------|----------|
+| `make infra-up` / `make infra-down` | Postgres + MinIO + Qdrant |
 | `make download-fma` | FMA metadata |
 | `make download-fma-audio` | FMA small audio (~7 GB) |
 | `make ingest-fma` | ingest в PostgreSQL + MinIO |
-| `make batch-embed` | batch MusiCNN embed → parquet + PostgreSQL |
-| `make run-inference-audio` | локальный API на :8001 |
-| `make migrate-db` | применить SQL-миграции (track_embeddings) |
-| `make up` / `make down` | полный docker-compose (этап 4+) |
+
+### Этап 2
+
+| Target | Описание |
+|--------|----------|
+| `make migrate-db` | SQL-миграция `track_embeddings` |
+| `make run-inference-audio` | FastAPI на :8001 (`/health`, `/api/v1/embed`) |
+| `make batch-embed` | batch MusiCNN → parquet + PostgreSQL (+ MinIO) |
+
+### Этап 4+
+
+| Target | Описание |
+|--------|----------|
+| `make up` / `make down` | полный docker-compose стек |
