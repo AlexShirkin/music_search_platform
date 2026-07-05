@@ -1,0 +1,45 @@
+[project]
+name = "music-search-platform"
+version = "0.1.0"
+description = "Music search platform: Airflow + Spark + vector search"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "librosa>=0.10.2",
+    "numpy>=1.26",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.3",
+    "soundfile>=0.12",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2",
+    "ruff>=0.4",
+]
+inference = [
+    "onnxruntime>=1.18",
+]
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["libs"]
+
+[tool.pytest.ini_options]
+pythonpath = ["libs"]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["libs", "scripts", "tests", "dags", "spark_jobs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["B011"]
