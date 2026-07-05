@@ -14,7 +14,7 @@
 |------|----------|--------|----------------------------|
 | 0 | Фундамент | `[x]` | Репозиторий, модели, CI skeleton |
 | 1 | Данные | `[x]` | FMA small в MinIO + catalog в PostgreSQL |
-| 2 | Inference slice | `[ ]` | 1 MP3 → 200-d vector через API |
+| 2 | Inference slice | `[x]` | 1 MP3 → 200-d vector через API |
 | 3 | Similar search | `[ ]` | k-NN по track_id через Qdrant |
 | 4 | Text search + UI | `[ ]` | Лендинг + форма → результаты в браузере |
 | 5 | Airflow offline | `[ ]` | DAG analyze → index без ручных скриптов |
@@ -24,7 +24,7 @@
 | 9 | cloud.ru prod | `[ ]` | Tag deploy + TLS + smoke tests |
 | 10 | Расширения | `[-]` | Lyrics, clustering, метрики (опционально) |
 
-**Текущий фокус:** _этап 2_
+**Текущий фокус:** _этап 3_
 
 ---
 
@@ -113,18 +113,18 @@
 
 ### 2.1 `services/inference-audio`
 
-- [ ] FastAPI app: `GET /health`, `POST /api/v1/embed`
-- [ ] Загрузка ONNX MusiCNN при старте (lazy ok)
-- [ ] Input: file upload или path в MinIO
-- [ ] Output: `{ "embedding": [200 floats], "tempo": …, "moods": … }`
-- [ ] Dockerfile + healthcheck
-- [ ] Unit-тест с mock ONNX или маленьким fixture
+- [x] FastAPI app: `GET /health`, `POST /api/v1/embed`, `POST /api/v1/embed/path`
+- [x] Загрузка ONNX MusiCNN при старте (lazy ok)
+- [x] Input: file upload или path в MinIO / track_id из PostgreSQL
+- [x] Output: `{ "embedding": [200 floats], "tempo": …, "moods": … }`
+- [x] Dockerfile + healthcheck
+- [x] Unit-тест с mock ONNX
 
 ### 2.2 Batch-скрипт (до Airflow)
 
-- [ ] `scripts/batch_embed.py` — N треков → parquet в MinIO `embeddings/dt=…/`
-- [ ] Прогнано на 50–100 треках FMA small
-- [ ] Запись embedding + track_id в PostgreSQL (таблица `embeddings` или jsonb в tracks)
+- [x] `scripts/batch_embed.py` — N треков → parquet в MinIO `embeddings/dt=…/`
+- [ ] Прогнано на 50–100 треках FMA small (локально: `make batch-embed`)
+- [x] Запись embedding + track_id в PostgreSQL (`track_embeddings`)
 
 **Gate этапа 2:** `curl -F file=@track.mp3 http://localhost:8001/api/v1/embed` → 200-d vector; batch parquet существует.
 

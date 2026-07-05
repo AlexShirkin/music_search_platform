@@ -11,34 +11,14 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "libs"))
 
-from music_platform.audio.spectrogram import SAMPLE_RATE, prepare_spectrogram_patches  # noqa: E402
+from music_platform.audio.spectrogram import SAMPLE_RATE  # noqa: E402
 from music_platform.config import get_settings  # noqa: E402
+from music_platform.inference.musicnn import MusiCNNEmbedder, top_moods  # noqa: E402
 
 
 def synthesize_audio(duration_sec: float = 5.0, freq_hz: float = 440.0) -> np.ndarray:
     t = np.linspace(0, duration_sec, int(SAMPLE_RATE * duration_sec), endpoint=False)
     return (0.5 * np.sin(2 * np.pi * freq_hz * t)).astype(np.float32)
-
-
-def embed_patches(patches: np.ndarray, model_path: Path) -> np.ndarray:
-    import onnxruntime as ort
-
-    session = ort.InferenceSession(
-        str(model_path),
-        providers=["CPUExecutionProvider"],
-    )
-    input_name = session.get_inputs()[0].name
-    per_patch = []
-    for patch in patches:
-        batch = patch[np.newaxis, ...]
-        out = session.run(None, {input_name: batch})[0]
-        per_patch.append(out[0])
-
-    vector = np.mean(per_patch, axis=0)
-    norm = np.linalg.norm(vector)
-    if norm > 0:
-        vector = vector / norm
-    return vector.astype(np.float32)
 
 
 def main() -> int:
@@ -49,16 +29,18 @@ def main() -> int:
         print("Run: make download-models")
         return 1
 
-    patches = prepare_spectrogram_patches(synthesize_audio(), SAMPLE_RATE)
-    if patches is None:
-        print("Failed to build spectrogram patches")
-        return 1
+    embedder = MusiCNNEmbedder(
+        embedding_model_path=settings.musicnn_embedding_path,
+        prediction_model_path=settings.musicnn_prediction_path,
+    )
+    result = embedder.embed_audio(synthesize_audio(), SAMPLE_RATE)
 
-    embedding = embed_patches(patches, model_path)
-    print(f"patches: {patches.shape}")
-    print(f"embedding dim: {embedding.shape[0]}")
-    print(f"embedding norm: {np.linalg.norm(embedding):.4f}")
-    print(f"first 5 values: {embedding[:5]}")
+    print(f"patches: {result.num_patches}")
+    print(f"embedding dim: {result.embedding.shape[0]}")
+    print(f"embedding norm: {np.linalg.norm(result.embedding):.4f}")
+    print(f"tempo: {result.tempo:.1f}")
+    print(f"top moods: {top_moods(result.moods, n=3)}")
+    print(f"first 5 values: {result.embedding[:5]}")
     return 0
 
 

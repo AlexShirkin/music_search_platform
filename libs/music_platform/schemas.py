@@ -20,6 +20,12 @@ class EmbedResponse(BaseModel):
     embedding: list[float]
     embedding_dim: int = 200
     num_patches: int
+    tempo: float | None = None
+    energy: float | None = None
+    key: str | None = None
+    scale: str | None = None
+    moods: dict[str, float] | None = None
+    top_moods: dict[str, float] | None = None
 
 
 class SearchResult(BaseModel):

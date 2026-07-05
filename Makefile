@@ -1,15 +1,16 @@
-PYTHON ?= $(if $(wildcard .venv/bin/python),.venv/bin/python,python3)
+PYTHON ?= $(if $(wildcard .venv/bin/python),$(abspath .venv/bin/python),python3)
 PIP ?= pip
 COMPOSE_DEV := deploy/docker-compose/docker-compose.dev.yml
 
 .PHONY: install install-dev lint format test test-integration up down infra-up infra-down infra-ps \
-        download-models smoke-musicnn download-fma download-fma-audio ingest-fma injest-fma
+        download-models smoke-musicnn download-fma download-fma-audio ingest-fma injest-fma \
+        migrate-db run-inference-audio batch-embed
 
 install:
 	$(PIP) install -e .
 
 install-dev:
-	$(PIP) install -e ".[dev,inference]"
+	$(PIP) install -e ".[dev,inference,api]"
 
 lint:
 	ruff check libs scripts tests dags spark_jobs
@@ -66,3 +67,12 @@ ingest-fma-local:
 
 smoke-musicnn:
 	$(PYTHON) scripts/smoke_musicnn.py
+
+migrate-db:
+	docker exec -i msp-postgres psql -U app -d music_search < deploy/docker-compose/init-db/002_embeddings.sql
+
+run-inference-audio:
+	$(PYTHON) -m uvicorn app.main:app --host 0.0.0.0 --port 8001 --reload --app-dir services/inference-audio
+
+batch-embed:
+	$(PYTHON) scripts/batch_embed.py --limit 100 --upload-s3

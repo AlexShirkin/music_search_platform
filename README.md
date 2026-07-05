@@ -4,11 +4,11 @@ Production-ready music search platform: **Airflow + Spark + Qdrant**.
 
 ## Roadmap
 
-Полный чеклист: [docs/plans_checklist.md](docs/plans_checklist.md) · **Текущий фокус:** этап 2
+Полный чеклист: [docs/plans_checklist.md](docs/plans_checklist.md) · **Текущий фокус:** этап 3
 
 - [x] Этап 0 — Фундамент: monorepo, `libs/`, MusiCNN, CI skeleton
 - [x] Этап 1 — Данные: FMA small в MinIO + catalog в PostgreSQL
-- [ ] Этап 2 — Inference slice: `inference-audio`, MP3 → 200-d embedding через HTTP
+- [x] Этап 2 — Inference slice: `inference-audio`, MP3 → 200-d embedding через HTTP
 - [ ] Этап 3 — Similar search: Qdrant + `search-api`, k-NN по `track_id`
 - [ ] Этап 4 — Text search + UI: лендинг, форма поиска, demo в браузере
 - [ ] Этап 5 — Airflow offline: DAG analyze → embed → index
@@ -66,4 +66,7 @@ make ingest-fma               # PostgreSQL + MinIO
 | `make download-fma` | FMA metadata |
 | `make download-fma-audio` | FMA small audio (~7 GB) |
 | `make ingest-fma` | ingest в PostgreSQL + MinIO |
+| `make batch-embed` | batch MusiCNN embed → parquet + PostgreSQL |
+| `make run-inference-audio` | локальный API на :8001 |
+| `make migrate-db` | применить SQL-миграции (track_embeddings) |
 | `make up` / `make down` | полный docker-compose (этап 4+) |
