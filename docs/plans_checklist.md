@@ -13,7 +13,7 @@
 | Этап | Название | Статус | Gate (критерий готовности) |
 |------|----------|--------|----------------------------|
 | 0 | Фундамент | `[x]` | Репозиторий, модели, CI skeleton |
-| 1 | Данные | `[ ]` | FMA small в MinIO + catalog в PostgreSQL |
+| 1 | Данные | `[x]` | FMA small в MinIO + catalog в PostgreSQL |
 | 2 | Inference slice | `[ ]` | 1 MP3 → 200-d vector через API |
 | 3 | Similar search | `[ ]` | k-NN по track_id через Qdrant |
 | 4 | Text search + UI | `[ ]` | Лендинг + форма → результаты в браузере |
@@ -24,7 +24,7 @@
 | 9 | cloud.ru prod | `[ ]` | Tag deploy + TLS + smoke tests |
 | 10 | Расширения | `[-]` | Lyrics, clustering, метрики (опционально) |
 
-**Текущий фокус:** _этап 1_
+**Текущий фокус:** _этап 2_
 
 ---
 
@@ -88,18 +88,20 @@
 
 ### 1.1 Локальная инфраструктура (docker-compose dev)
 
-- [ ] `deploy/docker-compose/docker-compose.dev.yml` — postgres, minio, qdrant
-- [ ] PostgreSQL: схема `tracks` (track_id, title, artist, album, genre, file_path, …)
-- [ ] MinIO: bucket `music-search`, папки `raw/audio/`, `staging/`, `embeddings/`
-- [ ] `make infra-up` поднимает только dev-стек
+- [x] `deploy/docker-compose/docker-compose.dev.yml` — postgres, minio, qdrant
+- [x] PostgreSQL: схема `tracks` (track_id, title, artist, album, genre, file_path, …)
+- [x] MinIO: bucket `music-search`, папки `raw/audio/`, `staging/`, `embeddings/`
+- [x] `make infra-up` поднимает только dev-стек
 
 ### 1.2 Датасет FMA small
 
-- [ ] Скачан `fma_metadata.zip` + `fma_small.zip`
-- [ ] Скрипт `scripts/ingest_fma.py` — парсинг metadata → PostgreSQL
-- [ ] Аудио залито в MinIO `raw/audio/` (или локальный volume)
-- [ ] В БД ≥ 1000 треков с валидным `file_path`
-- [ ] `docs/datasets.md` — откуда данные, лицензия, команды ingest
+- [x] Скрипт `scripts/download_fma.sh` — `fma_metadata.zip` + опционально `fma_small.zip`
+- [x] Metadata скачана в `data/fma/fma_metadata/`
+- [x] `fma_small.zip` скачан, 8000 MP3 на диске
+- [x] Скрипт `scripts/ingest_fma.py` — парсинг metadata → PostgreSQL (+ MinIO)
+- [x] Аудио залито в MinIO `raw/audio/` (после ingest с `--upload-s3`)
+- [x] В БД ≥ 1000 треков с валидным `file_path`
+- [x] `docs/datasets.md` — откуда данные, лицензия, команды ingest
 
 **Gate этапа 1:** SQL `SELECT count(*) FROM tracks` > 1000; файлы доступны из MinIO.
 
@@ -397,7 +399,7 @@ git push && gh run list
 | Дата | Этап | Что сделано |
 |------|------|-------------|
 | 2026-07-05 | 0 | Репозиторий клонирован; `plans.md` и `plans_checklist.md` перенесены в `docs/` |
-| 2026-07-05 | 0 | Monorepo skeleton, libs/, CI, models, smoke MusiCNN — gate пройден |
+| 2026-07-05 | 1 | docker-compose dev (Postgres, MinIO, Qdrant), ingest scripts, FMA metadata |
 
 _Добавляйте строки по мере прогресса._
 

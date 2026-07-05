@@ -4,10 +4,10 @@ Production-ready music search platform: **Airflow + Spark + Qdrant**.
 
 ## Roadmap
 
-Полный чеклист: [docs/plans_checklist.md](docs/plans_checklist.md) · **Текущий фокус:** этап 1
+Полный чеклист: [docs/plans_checklist.md](docs/plans_checklist.md) · **Текущий фокус:** этап 2
 
 - [x] Этап 0 — Фундамент: monorepo, `libs/`, MusiCNN, CI skeleton
-- [ ] Этап 1 — Данные: FMA small в MinIO + catalog в PostgreSQL
+- [x] Этап 1 — Данные: FMA small в MinIO + catalog в PostgreSQL
 - [ ] Этап 2 — Inference slice: `inference-audio`, MP3 → 200-d embedding через HTTP
 - [ ] Этап 3 — Similar search: Qdrant + `search-api`, k-NN по `track_id`
 - [ ] Этап 4 — Text search + UI: лендинг, форма поиска, demo в браузере
@@ -23,12 +23,24 @@ Production-ready music search platform: **Airflow + Spark + Qdrant**.
 ## Quick start (этап 0)
 
 ```bash
-python3 -m venv .venv && source .venv/bin/activate
+python3.13 -m venv .venv && source .venv/bin/activate
 make install-dev
 make lint test
 make download-models
 make smoke-musicnn
 ```
+
+## Quick start (этап 1 — данные)
+
+```bash
+cp .env.example .env
+make infra-up                 # Postgres + MinIO + Qdrant
+make download-fma             # metadata ~350 MB
+make download-fma-audio       # audio ~7 GB (отдельно, долго)
+make ingest-fma               # PostgreSQL + MinIO
+```
+
+Подробнее: [docs/datasets.md](docs/datasets.md)
 
 ## Документация
 
@@ -39,6 +51,7 @@ make smoke-musicnn
 | [docs/architecture.md](docs/architecture.md) | Компоненты и data flow |
 | [docs/models.md](docs/models.md) | MusiCNN preprocessing, лицензии |
 | [docs/local-dev.md](docs/local-dev.md) | Локальная разработка |
+| [docs/datasets.md](docs/datasets.md) | FMA, ingest, MinIO |
 
 ## Makefile targets
 
@@ -49,4 +62,8 @@ make smoke-musicnn
 | `make test` | pytest unit |
 | `make download-models` | MusiCNN ONNX (ISC) |
 | `make smoke-musicnn` | локальный inference smoke |
-| `make up` / `make down` | docker-compose (этап 1+) |
+| `make infra-up` / `make infra-down` | Postgres + MinIO + Qdrant (этап 1) |
+| `make download-fma` | FMA metadata |
+| `make download-fma-audio` | FMA small audio (~7 GB) |
+| `make ingest-fma` | ingest в PostgreSQL + MinIO |
+| `make up` / `make down` | полный docker-compose (этап 4+) |

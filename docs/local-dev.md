@@ -18,14 +18,17 @@ make install-dev
 cp .env.example .env
 ```
 
-## Этап 0 — проверка
+## Этап 1 — проверка
 
 ```bash
-make lint
-make test
-make download-models    # ~10 MB, MusiCNN ONNX
-make smoke-musicnn      # synthetic audio → 200-d embedding
+cp .env.example .env
+make infra-up
+make download-fma
+make download-fma-audio   # ~7 GB
+make ingest-fma
 ```
+
+Gate: `SELECT COUNT(*) FROM tracks` > 1000. См. [datasets.md](./datasets.md).
 
 ## Структура PYTHONPATH
 

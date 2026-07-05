@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     )
 
     database_url: str = Field(
-        default="postgresql://app:app@localhost:5432/music_search",
+        default="postgresql://app:changeme@localhost:5432/music_search",
         alias="DATABASE_URL",
     )
     qdrant_url: str = Field(default="http://localhost:6333", alias="QDRANT_URL")
